@@ -1,0 +1,71 @@
+import numpy as np
+import random
+from random import sample, choice
+from solverSu import solver
+
+
+#testing method
+def board():
+    grid = np.array(
+        [[0, 0, 6, 0, 3, 9, 0, 1, 0],
+         [2, 9, 0, 1, 4, 0, 7, 0, 3],
+         [0, 0, 0, 8, 0, 0, 9, 0, 0],
+         [1, 5, 4, 0, 9, 0, 0, 8, 0],
+         [8, 7, 0, 0, 0, 0, 4, 0, 0],
+         [0, 6, 0, 4, 0, 8, 0, 2, 1],
+         [0, 2, 0, 0, 8, 0, 6, 3, 5],
+         [4, 3, 7, 2, 6, 0, 0, 9, 0],
+         [6, 8, 0, 0, 0, 0, 2, 7, 0]])
+    return grid
+
+
+class generate():
+    def __init__(self):
+        self.base = 3
+        self.side = self.base * self.base
+
+    def remove(self, board):
+        row = len(board)
+        col = len(board[0])
+        r = []
+        spaces = [[x, y] for x in range(row) for y in range(col)]
+        for k in range(35):
+            r = random.choice(spaces)
+            board[r[0]][r[1]] = 0
+            spaces.remove(r)
+        s = solver(board).getSolution()
+        if s is not False:
+            print(s)
+            return board
+        else:
+            print("not solve", board)
+            generate.generate_random_board(self)
+
+    def pattern(self, r, c):
+        return (self.base * (r % self.base) + r // self.base + c) % self.side
+
+    @staticmethod
+    def shuffle(s):
+        return sample(s, len(s))
+
+    def generate_random_board(self):
+        rBase = range(self.base)
+        rows = [i * self.base + r for i in generate.shuffle(rBase) for r in generate.shuffle(rBase)]
+        cols = [j * self.base + c for j in generate.shuffle(rBase) for c in generate.shuffle(rBase)]
+        nums = generate.shuffle(range(1, self.side + 1))
+        board = [[nums[generate.pattern(self, r, c)] for c in cols] for r in rows]
+        grid = []
+        for line in board:
+            print(line)
+            grid.append(line)
+        generate.remove(self, grid)
+        return grid
+
+
+    def generate_board(self):
+        grid = np.array(generate.generate_random_board(self))
+        print(grid)
+        return grid
+
+s = generate()
+s.generate_board()
