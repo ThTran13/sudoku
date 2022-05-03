@@ -1,0 +1,152 @@
+from tkinter import *
+# from solverSu import solve
+from solverSu import solver
+# from generate_sudoku import generate_random_board
+from generate_sudoku import board
+from generate_sudoku import generate
+import numpy as np
+
+
+class sudoku_gui():
+    def __init__(self):
+        self.board_solution = []
+        self.board_ques = []
+        self.cells = {}
+
+    def draw3x3Grid(self, row, column, bgcolor):
+        for i in range(3):
+            for j in range(3):
+                e = Entry(root, width=5, bg=bgcolor, justify="center", validate="key", validatecommand=(reg, "%P"))
+                e.grid(row=row + i + 1, column=column + j + 1, sticky="nsew", padx=0, pady=0, ipady=7)
+                self.cells[(row + i + 1, column + j + 1)] = e
+
+    def draw9x9Grid(self):
+        color = "#eaf5ff"
+        for rowNo in range(1, 10, 3):
+            for colNo in range(0, 9, 3):
+                sudoku_gui.draw3x3Grid(self, rowNo, colNo, color)
+                if color == "#eaf5ff":
+                    color = "#d0d1ff"
+                else:
+                    color = "#eaf5ff"
+
+    def clearValues(self):
+        errLabel.configure(text="")
+        solvedLabel.configure(text="")
+        for row in range(2, 11):
+            for col in range(1, 10):
+                cell = self.cells[(row, col)]
+                cell.delete(0, "end")
+
+    def check_values(self):
+        errLabel.configure(text="")
+        solvedLabel.configure(text="")
+        board = []
+        sol_grid = self.board_solution
+        print(sol_grid)
+        for row in range(2, 11):
+            rows = []
+            for col in range(1, 10):
+                num = sol_grid[row - 2][col - 1]
+                val = (self.cells[(row, col)]).get()
+                if val == "":
+                    rows.append(0)
+                if val != num:
+                    rows.append(int(val))
+                    num_row = row - 2
+                    num_col = col - 1
+                    #errLabel.configure(text="wrong input")
+                    errLabel.configure(text="wrong input at row" + str(num_row) + " and column" + str(num_col))
+                else:
+                    rows.append(int(val))
+            board.append(rows)
+        check = np.array_equal(np.array(sol_grid), np.array(board))
+        print(check)
+        print(board)
+        if check is True:
+            errLabel.configure(text="")
+            solvedLabel.configure(text="Board is Solve")
+        else:
+            errLabel.configure(text="")
+            solvedLabel.configure(text="Board not Solve")
+
+    def get_newBoard(self):
+        errLabel.configure(text="")
+        solvedLabel.configure(text="")
+        for row in range(2, 11):
+            for col in range(1, 10):
+                cell = self.cells[(row, col)]
+                cell.delete(0, "end")
+
+        self.board_ques = []
+        self.board_solution = []
+        grid = generate().generate_board()
+        for row in range(2, 11):
+            rows = []
+            for col in range(1, 10):
+                if grid[row - 2][col - 1] != 0:
+                    self.cells[(row, col)].insert(0, grid[row - 2][col - 1])
+                    val = (self.cells[(row, col)]).get()
+                    rows.append(int(val))
+                else:
+                    rows.append(0)
+            self.board_ques.append(rows)
+        self.board_solution = solver(self.board_ques).getSolution()
+        print("solution: ", self.board_solution)
+        solvedLabel.configure(text="New Board Update")
+
+    def solve_board(self):
+        errLabel.configure(text="")
+        solvedLabel.configure(text="")
+        for row in range(2, 11):
+            for col in range(1, 10):
+                cell = self.cells[(row, col)]
+                cell.delete(0, "end")
+
+        board = self.board_solution
+        if board is not False:
+            for row in range(2, 11):
+                for col in range(1, 10):
+                    self.cells[(row, col)].delete(0, "end")  # delete existing value from the cells
+                    self.cells[(row, col)].insert(0, board[row - 2][col - 1])  # inserting the solution at the index
+            solvedLabel.configure(text="Sudoku Solved")
+        else:
+            errLabel.configure(text="No Solution for this sudoku!")
+
+
+root = Tk()
+root.geometry("515x550")
+root.title("Sudoku Solver")
+label = Label(root, text="Play Sudoku").grid(row=0, column=1, columnspan=10)
+errLabel = Label(root, text="", fg="red")  # create error label
+errLabel.grid(row=15, column=1, columnspan=10, pady=5)
+solvedLabel = Label(root, text="", fg="green")
+solvedLabel.grid(row=15, column=1, columnspan=10, pady=5)
+
+s = sudoku_gui()
+
+
+def ValidateNumber(P):
+    out = (P.isdigit() or P == "") and len(P) < 2
+    return out
+
+
+reg = root.register(ValidateNumber)
+# check user input solution
+btn = Button(root, command=s.check_values, text="Check", width=10)
+btn.grid(row=18, column=2, columnspan=3, pady=10)
+
+# click to solve the original sudoku generated
+btn = Button(root, command=s.solve_board, text="Solve", width=10)
+btn.grid(row=19, column=2, columnspan=3, pady=5)
+
+# click to get generate new board
+btn = Button(root, command=s.get_newBoard, text="New Board", width=10)
+btn.grid(row=18, column=6, columnspan=3, pady=10)
+
+# click to clear values
+btn = Button(root, command=s.clearValues, text="Clear", width=10)
+btn.grid(row=19, column=6, columnspan=3, pady=5)
+
+s.draw9x9Grid()
+root.mainloop()
